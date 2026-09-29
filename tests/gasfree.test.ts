@@ -108,6 +108,26 @@ describe('official GasFree Nile preflight and typed authorization', () => {
     test.state.account.active = true;
     expect(await test.preflight()).toMatchObject({ activationFeeMicros: 0, estimatedFeeMicros: 200_000 });
   });
+  it('does not let an unrelated token with unsafe JSON-number fees break USDT discovery', async () => {
+    const test = rig();
+    const otherToken = fixtureAddress(12);
+    (test.state.tokens as unknown[]).push({ tokenAddress: otherToken, symbol: 'USDD', decimal: 18, supported: true,
+      activateFee: 10_000_000_000_000_000_000, transferFee: 300_000_000_000_000_000 });
+    (test.state.account.assets as unknown[]).push({ tokenAddress: otherToken, tokenSymbol: 'USDD', decimal: 18,
+      activateFee: 10_000_000_000_000_000_000, transferFee: 300_000_000_000_000_000, frozen: 0 });
+    const check = await test.preflight();
+    expect(check.selectedToken).toMatchObject({ tokenAddress: token, symbol: 'USDT', decimal: 6 });
+    expect(check.supportedTokens).toEqual([expect.objectContaining({ tokenAddress: token })]);
+    expect(check.ready).toBe(true);
+  });
+  it('still rejects unsafe numeric fees when they belong to the selected USDT', async () => {
+    const tokenTest = rig();
+    tokenTest.state.tokens[0].activateFee = 10_000_000_000_000_000_000 as unknown as string;
+    await expect(tokenTest.preflight()).rejects.toMatchObject({ code: 'INVALID_PROVIDER_RESPONSE' });
+    const assetTest = rig();
+    assetTest.state.account.assets[0].transferFee = 10_000_000_000_000_000_000 as unknown as string;
+    await expect(assetTest.preflight()).rejects.toMatchObject({ code: 'INVALID_PROVIDER_RESPONSE' });
+  });
   it('blocks pending accounts and insufficient spendable balances without inventing funds', async () => {
     const test = rig();
     test.state.account.allow_submit = false;

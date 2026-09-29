@@ -32,14 +32,21 @@ const uint = z.union([z.string().regex(/^(0|[1-9]\d{0,77})$/), z.number().int().
 const safeInt = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const tokenSchema = z.object({ tokenAddress: address, symbol: z.string().min(1).max(20), decimal: z.number().int().min(0).max(36),
   supported: z.boolean(), activateFee: uint, transferFee: uint });
+// Discovery can include unrelated assets whose JSON-number fees exceed the exact
+// integer range in JavaScript. Keep those fee fields opaque until a token is
+// selected, then validate only the selected token with tokenSchema.
+const tokenDiscoverySchema = z.object({ tokenAddress: address, symbol: z.string().min(1).max(20),
+  decimal: z.number().int().min(0).max(36), supported: z.boolean(), activateFee: z.unknown(), transferFee: z.unknown() });
 const providerSchema = z.object({ address, name: z.string().max(100), config: z.object({ maxPendingTransfer: safeInt,
   minDeadlineDuration: safeInt, maxDeadlineDuration: safeInt, defaultDeadlineDuration: safeInt }) })
   .refine(p => p.config.minDeadlineDuration > 0 && p.config.maxDeadlineDuration <= 86_400 &&
     p.config.defaultDeadlineDuration >= p.config.minDeadlineDuration && p.config.defaultDeadlineDuration <= p.config.maxDeadlineDuration);
 const assetSchema = z.object({ tokenAddress: address, tokenSymbol: z.string().max(20), decimal: z.number().int().min(0).max(36),
   activateFee: uint, transferFee: uint, frozen: uint });
+const assetDiscoverySchema = z.object({ tokenAddress: address, tokenSymbol: z.string().max(20),
+  decimal: z.number().int().min(0).max(36), activateFee: z.unknown(), transferFee: z.unknown(), frozen: z.unknown() });
 const accountSchema = z.object({ accountAddress: address, gasFreeAddress: address, active: z.boolean(), nonce: uint,
-  allowSubmit: z.boolean().optional(), allow_submit: z.boolean().optional(), assets: z.array(assetSchema).max(100) })
+  allowSubmit: z.boolean().optional(), allow_submit: z.boolean().optional(), assets: z.array(assetDiscoverySchema).max(100) })
   .refine(a => a.allowSubmit !== undefined || a.allow_submit !== undefined)
   .refine(a => a.allowSubmit === undefined || a.allow_submit === undefined || a.allowSubmit === a.allow_submit);
 const uuid = z.string().uuid();
@@ -168,23 +175,28 @@ export function createGasFreeAdapter(rawConfig: GasFreeConfig, dependencies: Ada
       provider('GET', '/api/v1/config/token/all'), provider('GET', '/api/v1/config/provider/all'),
       provider('GET', `/api/v1/address/${input.payerAddress}`),
     ]);
-    const tokens = parse(z.object({ tokens: z.array(tokenSchema).max(100) }), tokenResponse).tokens;
+    const tokens = parse(z.object({ tokens: z.array(tokenDiscoverySchema).max(100) }), tokenResponse).tokens;
     const providers = parse(z.object({ providers: z.array(providerSchema).min(1).max(100) }), providerResponse).providers;
     const account = parse(accountSchema, accountResponse);
     if (account.accountAddress !== input.payerAddress || account.gasFreeAddress !== sdk.generateGasFreeAddress(input.payerAddress)) {
       throw new GasFreeError('ACCOUNT_MISMATCH', 'GasFree 返回的 EOA 或派生账户与所选钱包不一致。');
     }
-    const supportedTokens = tokens.filter(token => token.supported);
-    const eligible = supportedTokens.filter(token => token.symbol === 'USDT' && token.decimal === 6 && (!input.tokenAddress || token.tokenAddress === input.tokenAddress));
+    const eligible = tokens.filter(token => token.supported && token.symbol === 'USDT' && token.decimal === 6 &&
+      (!input.tokenAddress || token.tokenAddress === input.tokenAddress));
     if (eligible.length !== 1) throw new GasFreeError('UNSUPPORTED_TOKEN', '请选择一个当前支持的 6 位精度 USDT 合约。', 422);
-    const selectedToken = eligible[0];
+    const selectedToken = parse(tokenSchema, eligible[0]);
+    const supportedTokens = tokens.flatMap(token => {
+      if (!token.supported) return [];
+      const parsed = tokenSchema.safeParse(token);
+      return parsed.success ? [parsed.data] : [];
+    });
     const selectedProvider = input.providerAddress ? providers.find(p => p.address === input.providerAddress) : providers.length === 1 ? providers[0] : undefined;
     if (!selectedProvider) throw new GasFreeError('PROVIDER_SELECTION_REQUIRED', '请从当前 GasFree 服务商列表中明确选择一家。', 422);
     const assets = account.assets.filter(asset => asset.tokenAddress === selectedToken.tokenAddress);
     if (assets.length !== 1 || assets[0].decimal !== 6 || assets[0].tokenSymbol !== 'USDT') {
       throw new GasFreeError('ACCOUNT_ASSET_UNAVAILABLE', '缺少该代币的账户费用或冻结金额，不能猜测可用余额。');
     }
-    const asset = assets[0];
+    const asset = parse(assetSchema, assets[0]);
     const balanceMicros = await chainBalance(account.accountAddress, account.gasFreeAddress, selectedToken.tokenAddress);
     const frozenMicros = asset.frozen;
     const available = BigInt(balanceMicros) > BigInt(frozenMicros) ? BigInt(balanceMicros) - BigInt(frozenMicros) : 0n;
