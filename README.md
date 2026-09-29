@@ -12,7 +12,7 @@ SettleMap helps a Seoul Web3 marketing operator reconcile monthly commissions fo
 ## Submission materials · 提交材料
 
 - [Public GitHub repository](https://github.com/Jimmycoding0301/gwdc-2026-settlemap)
-- [56-second demo video](https://github.com/Jimmycoding0301/gwdc-2026-settlemap/raw/refs/heads/main/docs/submission/demo.mp4)
+- [67-second demo video](https://github.com/Jimmycoding0301/gwdc-2026-settlemap/raw/refs/heads/main/docs/submission/demo.mp4)
 - [Pitch deck](https://github.com/Jimmycoding0301/gwdc-2026-settlemap/raw/refs/heads/main/docs/submission/pitch-deck.pptx)
 
 ## Three-minute demo · 三分钟演示
