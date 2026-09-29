@@ -258,6 +258,31 @@ describe('submission, real identifiers, and status-first recovery', () => {
     expect(result).toMatchObject({ status: 'UNKNOWN', failureCode: 'CHAIN_MISMATCH', retryAction: 'QUERY_ORIGINAL',
       chainVerification: { status: 'MISMATCH' } });
   });
+  it('ignores an unrelated no-data event before the exact Transfer log', async () => {
+    const test = rig(); const auth = await test.prepare();
+    test.state.chain = async () => new Response(JSON.stringify({ id: hash, blockNumber: 12_345, blockTimeStamp: time,
+      receipt: { result: 'SUCCESS' }, log: [
+        { address: addressHex(fixtureAddress(13)), topics: ['ef'.repeat(32)] },
+        { address: addressHex(token), topics: [transferTopic, addressHex(gasFreeAddress).padStart(64, '0'),
+          addressHex(receiver).padStart(64, '0')], data: BigInt(2_000_000).toString(16).padStart(64, '0') },
+      ] }));
+    const result = await test.adapter.query(auth, traceId);
+    expect(result).toMatchObject({ status: 'CONFIRMED', txHash: hash, retryAction: 'NONE',
+      chainVerification: { status: 'VERIFIED', transferLogIndex: 1 } });
+    expect(test.postCount()).toBe(0);
+  });
+  it('does not accept a transfer-shaped log without an exact 32-byte amount', async () => {
+    for (const data of [undefined, '00'.repeat(31)]) {
+      const test = rig(); const auth = await test.prepare();
+      test.state.chain = async () => new Response(JSON.stringify({ id: hash, blockNumber: 12_345, blockTimeStamp: time,
+        receipt: { result: 'SUCCESS' }, log: [{ address: addressHex(token), topics: [transferTopic,
+          addressHex(gasFreeAddress).padStart(64, '0'), addressHex(receiver).padStart(64, '0')],
+          ...(data === undefined ? {} : { data }) }] }));
+      expect(await test.adapter.query(auth, traceId)).toMatchObject({ status: 'UNKNOWN', failureCode: 'CHAIN_MISMATCH',
+        chainVerification: { status: 'MISMATCH' }, retryAction: 'QUERY_ORIGINAL' });
+      expect(test.postCount()).toBe(0);
+    }
+  });
   it('requires both the solidified transaction body and receipt to report success', async () => {
     const test = rig(); const auth = await test.prepare();
     test.state.transaction = async () => new Response(JSON.stringify({ txID: hash, ret: [{ contractRet: 'REVERT' }] }));

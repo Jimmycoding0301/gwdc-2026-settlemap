@@ -60,7 +60,7 @@ const transferSchema = z.object({
   txnTotalFee: uint.nullish(), txnAmount: uint.nullish(),
 });
 const chainLogSchema = z.object({ address: z.string().regex(/^(?:41)?[0-9a-f]{40}$/i),
-  topics: z.array(z.string().regex(/^[0-9a-f]{64}$/i)).max(16), data: z.string().regex(/^[0-9a-f]*$/i) }).passthrough();
+  topics: z.array(z.string().regex(/^[0-9a-f]{64}$/i)).max(16), data: z.string().regex(/^[0-9a-f]*$/i).default('') }).passthrough();
 const solidityReceiptSchema = z.object({ id: z.string().regex(/^[0-9a-f]{64}$/i), blockNumber: safeInt,
   blockTimeStamp: safeInt, receipt: z.object({ result: z.string().optional() }).passthrough().optional(),
   result: z.string().optional(), log: z.array(chainLogSchema).max(10_000).optional() }).passthrough();
