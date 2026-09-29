@@ -1,0 +1,45 @@
+# SettleMap local backend
+
+The API is an independent Express service on loopback port 8788. Run `npm run dev:api` from the repository root; the frontend on port 5174 forwards `/api` here. Local runtime data belongs under this repository's `.data/` directory.
+
+The service has two explicit modes. `fixture` is a deterministic local recovery demo. `live` uses the official GasFree Nile API and SDK for account preflight, TIP-712 authorization, submit, status recovery, and reconciliation. Live mode requires `GASFREE_API_KEY` and `GASFREE_API_SECRET`; transfer submission also requires `ENABLE_GASFREE_LIVE=true`. Missing credentials or a disabled kill switch fail explicitly and never fall back to simulated success.
+
+All simulated identifiers are prefixed with `sim_`. A fixture has no blockchain transaction hash. `UNKNOWN` is an unresolved submission result: recovery checks the existing trace and existing attempt instead of generating a new payment attempt. A retry must not be inferred from a browser refresh or a network timeout.
+
+CSV rows preserve their original business identity. Validation, grouping, execution, and reconciliation should retain the row-to-payment mapping. The 12-row example is expected to produce 9 valid business lines and 3 grouped payments. Monetary values must use exact integer minor units, with fee totals recorded once per payment rather than once per source row.
+
+The GasFree server adapter uses HMAC-authenticated API calls, dynamic token/provider/account configuration, and sequential submissions respecting the provider's pending limit. Wallet transfer authorization belongs in TronLink; the backend never accepts or discovers private keys or seed phrases. The current `window.tron` + `eth_requestAccounts` surface is preferred, with a legacy fallback, and both connection and signing are locked to Nile. The official `requestId` description does not establish idempotent submission behavior, so an unknown outcome is investigated using the preserved authorization and trace information.
+
+No API credentials are necessary for fixture development. See the project README for setup, current limitations, and official integration references.
+
+## API contract
+
+- `GET /api/health`: configuration and execution-mode status.
+- `GET /api/sample`: returns `{rows,csv,note}` for the 12-line fixture.
+- `POST /api/import {csv}`: parses CSV and returns `{rows}`.
+- `POST /api/intake/screenshot {imageDataUrl}`: local-only Apple Vision extraction. Returns `{source:"local-vision",drafts:[{row,original,confidence,warnings}],warnings}`. The strict PNG/JPEG data URL must decode to at most 1 MiB / 8192 px per edge / 12 MP. No remote URLs, wallet operations, provider calls, batch creation, or complete OCR-text return. The user must explicitly confirm import in the UI. macOS/Swift unavailable returns a fixed `OCR_UNAVAILABLE`; timeout is 30 seconds, child environment is allowlisted, and private temporary files are removed. Tests can inject an OCR runner in `createApp(service,config,{ocr})` without changing production behavior.
+- `POST /api/preview {rows}`: produces the validation and settlement plan without executing it.
+- `POST /api/ops/inspect {rows,excludeBatchId?}`: read-only cross-batch inspection. Returns `items` with `rowId`, `invoiceId`, `historyStatus` (`NEW`, `SETTLED`, `UNRESOLVED`), `addressStatus` (`NEW`, `MATCH`, `CHANGED`) and available historical address/batch/trace references. Summary counts settled, unresolved and changed-address rows, plus distinct new payees. Confirmed individual payments count even when their batch is only partially completed; only the most recent confirmed payment establishes a historical address. Draft/queued-only rows do not count as settled.
+- `POST /api/batches {rows,mode?,payerAddress?}`: creates a batch. `mode` defaults to `fixture`. Live mode performs a real Nile preflight, derives the GasFree account and binds current token, provider, balance, frozen amount and fees. It also stores a timestamp-free deterministic settlement manifest and SHA-256 digest; missing credentials or payer fails closed.
+- `GET /api/batches`, `GET /api/batches/:id`: list/read stored batches.
+- `POST /api/batches/:id/confirm {planDigest}`: confirm the exact previewed plan.
+- `POST /api/batches/:id/run`: execute the explicit fault-injection fixture and pause with the first payment confirmed, the second unknown, and the third queued.
+- `POST /api/batches/:id/live/prepare {}`: refresh the next payment's preflight and return the exact server-stored TIP-712 authorization for TronLink. A local operation hash associates the batch manifest with all TIP-712 payment fields. The manifest/operation hashes are neither fields in the wallet signature nor on-chain data. It does not submit.
+- `POST /api/batches/:id/live/submit {paymentId,requestId,signature}`: submit only the matching saved authorization. It never accepts a browser-supplied replacement authorization; `ENABLE_GASFREE_LIVE=true` is required.
+- `POST /api/batches/:id/recover`: query the original unresolved trace. Fixture mode then completes its queue; live mode never creates a new authorization or repeats the submit.
+- `GET /api/batches/:id/export/business.csv`: export original business rows and reconciliation results.
+- `GET /api/batches/:id/export/payments.csv`: export grouped payments and their fees once per group.
+- `GET /api/batches/:id/export/package.zip`: one download containing both CSVs, full `batch.json`, and a checksum manifest. Standard ZIP STORE format, without external archive dependencies. It preserves the current snapshot, including partial/unknown results, settlement/operation hashes, explorer links and independent RPC audit fields.
+- `POST /api/demo/reset {confirm:"RESET_FIXTURE_HISTORY"}`: reset only fixture data after saving a local `demo-reset-backup-*.json` alongside state. Rejects concurrent execution and any non-fixture batch/receipt. Returns removed counts and backup filename. No live service is called.
+
+In fixture mode, `PAUSED` and `COMPLETED` only describe a local lifecycle. In live mode, a payment is `CONFIRMED` only after GasFree reports `SUCCEED` + `SOLIDITY` with a valid chain hash **and** the official Nile `/walletsolidity/gettransactionbyid` and `/walletsolidity/gettransactioninfobyid` endpoints return a matching solidified transaction body and successful receipt containing an exact TRC-20 `Transfer` for token, GasFree sender, receiver and amount. The receipt block time must be within `authorization.createdAt .. deadline`, allowing 30 seconds of chain clock skew on either side. An empty, unavailable, malformed, late/early or mismatched RPC result remains processing/unknown and can only query the original trace.
+
+The evidence sources are deliberately separate. GasFree Provider supplies the `traceId -> txHash` association. Nile RPC independently proves the transaction and exact transfer, but cannot prove which Provider trace named it. The manifest and operation hashes are local reconciliation metadata; they are not on-chain and are not included in the TIP-712 signature. Before confirmation, the service scans all persisted batches and attempts so one `(txHash, transferLogIndex)` can belong to only one local payment/operation. Reuse remains `UNKNOWN` with `CHAIN_EVIDENCE_REUSED`; this uniqueness scope is the current local store, not a cross-machine registry.
+
+## Review and historical duplicate controls
+
+An input row can carry `reviewedOverLimit?: boolean`, `reviewedAddressChange?: boolean`, `deferred?: boolean`, and `reviewNote?: string`. Amounts above 500 USDT stay excluded unless explicitly marked reviewed. A deferred row remains in the plan and business export with a `DEFERRED` issue but never enters a payment group. Review flags and notes are included in the confirmed plan digest and exported business rows; plan summaries include `reviewedOverLimitRows`, `reviewedAddressChangeRows` and `deferredRows`. The ZIP manifest retains those counts and a full batch export. A review flag is the local operator's declaration, not an independently authenticated approval or proof of address ownership.
+
+Historical `invoiceId` conflicts are enforced at creation, confirmation and execution for rows that would actually be paid. Both settled and unresolved earlier payments block a new payment. The user can defer those rows and preserve them in the new batch. This check is repeated at execution because a different batch might have completed after the draft was created. A known payee using an address different from the most recent confirmed payment is also blocked at each stage with `409 ADDRESS_CHANGE_UNREVIEWED` unless that row is explicitly marked `reviewedAddressChange: true` or deferred. The inspection still reports `CHANGED` after review. Addresses are never silently rewritten, and manual review does not prove who owns an address.
+
+CSV imports accept the optional flags as `true` or `false`, and reject ambiguous flag values. Existing input columns remain supported. Monetary totals, including aggregated reviewed rows and fees, must remain within safe integer precision.
