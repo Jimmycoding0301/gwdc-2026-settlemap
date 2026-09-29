@@ -35,9 +35,9 @@ SettleMap helps a Seoul Web3 marketing operator reconcile monthly commissions fo
 
 ## Current evidence status · 当前证据状态
 
-The fixture and injected live-adapter tests are complete, but this submission snapshot has **no GasFree API Key/Secret and no real GasFree Nile transfer**. The screenshots therefore label provider and on-chain evidence as pending. No simulated request ID, trace or hash is presented as a real transaction.
+The fixture and injected live-adapter tests are complete. In addition, one standalone, one-recipient GasFree Nile canary is now publicly verified: Provider `SUCCEED`, chain `SOLIDITY`, exact transfer verified at block `71389721`, log index `2`. Review the [sanitized evidence JSON](docs/evidence/gasfree-nile-canary.json), the [evidence index](docs/evidence/README.md), or the [Nile TRONSCAN transaction](https://nile.tronscan.org/#/transaction/1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586).
 
-当前代码已完成 GasFree 适配、签名、状态恢复和 Nile RPC 核验逻辑，但尚未取得 GasFree Nile 凭据与真实测试币转账。路演时必须明确这一点。
+这份真实证据只覆盖一笔独立的单收款人 canary，不是标准演示中的三笔 fixture 批次，也不证明整批已在链上执行。现有截图和标准演示仍明确标记为 fixture；其中的 `sim_` request ID、trace 或 hash 不作为真实交易展示。
 
 Recording cues: [docs/demo-script.md](docs/demo-script.md).
 
@@ -60,7 +60,7 @@ npm test
 npm run build
 ```
 
-To configure a future Nile validation, copy `.env.example` to `.env`, add credentials obtained directly from the official GasFree developer channel, and leave `ENABLE_GASFREE_LIVE=false` until the dedicated test wallet, derived GasFree account and test USDT are ready.
+To reproduce the canary or run additional Nile validation, copy `.env.example` to `.env`, add credentials obtained directly from the official GasFree developer channel, and leave `ENABLE_GASFREE_LIVE=false` until the dedicated test wallet, derived GasFree account and test USDT are ready. Credentials, signer material, signatures and recovery journals remain local and are excluded from the public evidence.
 
 ## Safety model · 安全模型
 
@@ -70,4 +70,4 @@ To configure a future Nile validation, copy `.env.example` to `.env`, add creden
 - GasFree maps `traceId` to `txHash`; independent Nile Solidity RPC verifies finality, execution and the exact token/from/to/amount log.
 - Local `manifestHash` and `operationHash` aid reconciliation but are not on-chain and are not part of the wallet's TIP-712 signature.
 
-See [SUBMISSION.md](SUBMISSION.md), [HACKATHON_SCOPE.md](HACKATHON_SCOPE.md), [SECURITY.md](SECURITY.md), [server boundaries](server/README.md), and [verification notes](docs/verification.md).
+See [SUBMISSION.md](SUBMISSION.md), [HACKATHON_SCOPE.md](HACKATHON_SCOPE.md), [SECURITY.md](SECURITY.md), [server boundaries](server/README.md), [verification notes](docs/verification.md), and the [public evidence index](docs/evidence/README.md).

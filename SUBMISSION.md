@@ -30,12 +30,14 @@
 
 ## Evidence and validation
 
-- Clean-package validation: `npm ci` passed; 74 tests passed; production build passed.
+- Validation: `npm ci` previously passed; the 2026-09-30 run has 84 passing tests and a passing production build.
 - Commands: `npm test`, `npm run build`
 - Browser and OCR notes: [docs/verification.md](docs/verification.md)
+- Real Nile canary: GasFree `SUCCEED`, chain `SOLIDITY`, exact TRC-20 `Transfer` independently verified at block `71389721`, log index `2`.
+- Public proof: [sanitized evidence JSON](docs/evidence/gasfree-nile-canary.json), [evidence index](docs/evidence/README.md), and [Nile TRONSCAN transaction](https://nile.tronscan.org/#/transaction/1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586).
 
 ## Disclosure
 
-No GasFree Nile API credentials or real GasFree transfer were available for this snapshot. Live adapter behavior is covered by controlled tests; the standard demo is explicitly fixture mode. See [HACKATHON_SCOPE.md](HACKATHON_SCOPE.md).
+The public chain evidence covers one standalone, one-recipient canary with amount `1000001` micro-USDT and actual fee `1300000` micro-USDT. It does not cover the standard three-payment fixture demo or establish that the browser/TronLink batch flow ran end to end. The standard demo remains explicitly fixture mode; controlled tests cover the wider adapter and recovery behavior. See [HACKATHON_SCOPE.md](HACKATHON_SCOPE.md).
 
 No open-source license has been selected. The public repository is available to reviewers without sign-in.

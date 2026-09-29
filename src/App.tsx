@@ -98,6 +98,15 @@ const exactMoney = (micros = '0') => {
 
 const short = (value?: string) => value ? `${value.slice(0, 8)}…${value.slice(-6)}` : '—';
 
+const liveGasFreeCanary = {
+  txHash: '1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586',
+  explorerUrl: 'https://nile.tronscan.org/#/transaction/1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586',
+  blockNumber: 71_389_721,
+  amount: '1.000001',
+  fee: '1.3',
+  transferLogIndex: 2,
+} as const;
+
 
 function IssuePill({ row }: { row: ValidatedRow }) {
   if (row.status === 'VALID') return <span className="status-pill valid"><Check size={13} />可结算</span>;
@@ -811,7 +820,7 @@ export default function App() {
         <div className="integration-grid">
           <div className="integration-card ready"><span><FileCheck2 size={20} /></span><div><small>LOCAL PRODUCT FLOW</small><h3>本地闭环已就绪</h3><p>导入、校验、合并、清单绑定、未知状态恢复和双层对账。</p></div><BadgeCheck size={20} /></div>
           <div className={`integration-card ${health?.liveEnabled ? 'ready' : 'waiting'}`}><span><WalletCards size={20} /></span><div><small>GASFREE NILE</small><h3>{health?.liveEnabled ? '真实提交已显式启用' : health?.gasFree.configured ? '凭据已配置 · submit 尚关闭' : '等待官方 API 凭据'}</h3><p>{health?.note || 'API Key 与 Secret 只保存在服务端。'}</p></div>{health?.liveEnabled ? <BadgeCheck size={20} /> : <Clock3 size={20} />}</div>
-          <div className={`integration-card ${batch?.payments.some(payment => payment.status === 'CONFIRMED' && payment.chainVerification?.status === 'VERIFIED') ? 'ready' : 'waiting'}`}><span><Link2 size={20} /></span><div><small>ON-CHAIN EVIDENCE</small><h3>{batch?.payments.some(payment => payment.status === 'CONFIRMED' && payment.chainVerification?.status === 'VERIFIED') ? 'Nile 固化回执已独立核验' : batch?.payments.some(payment => payment.txHash) ? '已有哈希 · 等待完整关联' : '真实交易尚未验证'}</h3><p>{batch?.payments.some(payment => payment.status === 'CONFIRMED' && payment.chainVerification?.status === 'VERIFIED') ? 'RPC 证明精确 Transfer；trace→tx 由 GasFree 返回，本机还检查 tx/log 未被其他付款占用。' : '需取得 GasFree trace→tx 结果，并由 Nile Solidity RPC 找到未被复用的精确 Transfer 日志。'}</p></div>{batch?.payments.some(payment => payment.status === 'CONFIRMED' && payment.chainVerification?.status === 'VERIFIED') ? <BadgeCheck size={20} /> : <Clock3 size={20} />}</div>
+          <a className="integration-card ready proof-link" href={liveGasFreeCanary.explorerUrl} target="_blank" rel="noreferrer" aria-label="查看已验证的 GasFree Nile 交易"><span><Link2 size={20} /></span><div><small>LIVE GASFREE CANARY</small><h3>真实 Nile 转账已核验</h3><p>{liveGasFreeCanary.amount} USDT · 费用 {liveGasFreeCanary.fee} USDT · 区块 {liveGasFreeCanary.blockNumber.toLocaleString('en-US')} · Transfer 日志 #{liveGasFreeCanary.transferLogIndex}</p><code>{short(liveGasFreeCanary.txHash)}</code></div><BadgeCheck size={20} /></a>
         </div>
       </section>
     </main>

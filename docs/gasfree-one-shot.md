@@ -58,6 +58,12 @@ npm run gasfree:nile -- --recover-intent demo-001-live --poll-seconds 120
 
 Recovery requires the GasFree API credentials so it can query the saved trace, but it does not require `ENABLE_GASFREE_LIVE=true` or the signer key. It never signs and never calls the submit endpoint. An intent journal with no saved trace cannot be recovered automatically because the official interface does not document request-ID lookup; preserve it for manual provider reconciliation.
 
+## Verified public canary
+
+On 2026-09-30 KST this path produced one verified, one-recipient Nile canary. GasFree reported `SUCCEED + SOLIDITY`, and Nile Solidity RPC verified the exact transfer at block `71389721`, log index `2`. See the [public evidence index](evidence/README.md), [sanitized JSON](evidence/gasfree-nile-canary.json), and [Nile TRONSCAN transaction](https://nile.tronscan.org/#/transaction/1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586).
+
+This is evidence for one standalone canary only. It does not establish that the synthetic three-payment fixture batch or the browser/TronLink flow was broadcast end to end.
+
 ## Evidence acceptance
 
 The sanitized evidence file contains public addresses, integer amounts and fees, request/trace/transaction identifiers, result status, and chain verification. It never contains the API key, HMAC secret, wallet private key, seed phrase, or signature.

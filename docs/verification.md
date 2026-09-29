@@ -2,7 +2,26 @@
 
 验证日期：2026-09-28（KST）；链上证据代码复验：2026-09-29（KST）。浏览器结果覆盖本地 fixture；自动测试同时覆盖 fixture 与注入传输层的 GasFree Nile 适配/编排。两者都不是外部 GasFree 鉴权或真实链上付款证明。受限浏览器中的剪贴板拒绝与手动复制回退已经验证；允许权限后的实际写入仍未单独验证。
 
-2026-09-29 本地复验：`npm test` 通过 74 项，`npm run build` 通过。新增覆盖当前 `window.tron` / `eth_requestAccounts`、旧接口回退、Nile 网络锁、官方 Nile typed-data 域、确定性 settlement manifest、逐笔 operation hash，以及 GasFree 成功后通过 Nile Solidity RPC 对交易正文、成功回执和 TRC-20 `Transfer` 的 token/from/to/amount 做独立核验。还覆盖授权时间窗口（前后 30 秒时钟容差）和全本机 store 的 `(txHash, transferLogIndex)` 防复用。RPC 缺失、不匹配、超出授权窗口或证据已占用都不会标记成功。manifest/operation hash 是本地对账元数据，没有上链，也没有签入 TIP-712。由于本机仍无 GasFree 凭据、测试 USDT 和真人 TronLink 签名，本记录仍不声称已产生真实交易。
+2026-09-30 本地复验：`npm test` 通过 9 个测试文件、84 项测试，`npm run build` 通过。新增覆盖当前 `window.tron` / `eth_requestAccounts`、旧接口回退、Nile 网络锁、官方 Nile typed-data 域、确定性 settlement manifest、逐笔 operation hash，以及 GasFree 成功后通过 Nile Solidity RPC 对交易正文、成功回执和 TRC-20 `Transfer` 的 token/from/to/amount 做独立核验。还覆盖授权时间窗口（前后 30 秒时钟容差）和全本机 store 的 `(txHash, transferLogIndex)` 防复用。RPC 缺失、不匹配、超出授权窗口或证据已占用都不会标记成功。manifest/operation hash 是本地对账元数据，没有上链，也没有签入 TIP-712。这一段只记录自动化回归；真实 canary 的外部证据单独列在下方。
+
+## 真实 GasFree Nile canary（2026-09-30 KST）
+
+通过 one-shot 工具完成一笔独立、单收款人的 GasFree Nile 转账。该证据只证明这一笔 canary，不是标准演示中的三笔 fixture 批次，也不证明浏览器 TronLink 流程已端到端运行。
+
+| 字段 | 已验证结果 |
+| --- | --- |
+| Provider / chain | `SUCCEED` / `SOLIDITY` |
+| Verification | `gasfree-provider+nile-solidity-rpc`; `exactTransferVerified: true` |
+| Transaction | [`1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586`](https://nile.tronscan.org/#/transaction/1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586) |
+| Block / log | `71389721` / `2` |
+| Token | `TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf` |
+| GasFree sender | `TH3V9cnUct542ss5ZgAzNHWnFH9ycB1Tw1` |
+| Receiver | `TQcxtc1CmGRL8NwuDs3LewTBFycgXb28AR` |
+| Amount / actual fee | `1000001` / `1300000` micro-USDT |
+| Independent post-state query | GasFree balance `1997699999`; receiver balance `1000001` raw micro-USDT. The GasFree decrease from `2000000000` is `2300001`, matching amount + fee |
+| Request / trace | `4198b7d4-da5d-4d16-b30a-7439f26530b2` / `6abc5473-0f57-4f0c-92a6-18f7efc3adc3` |
+
+[脱敏公开 JSON](evidence/gasfree-nile-canary.json)的交易结果字段由忽略的本地证据记录按白名单导出，`postState` 部分来自独立余额查询。[证据索引](evidence/README.md)说明 Provider 与 Nile RPC 各自证明的范围。公开文件不包含 API Key/Secret、钱包私钥、签名、授权摘要或私有 journal。
 
 ## B.AI 风格与本机截图导入（最新）
 
@@ -16,7 +35,7 @@
 
 新增测试覆盖万能输入意图分类、保守表格提取、地址大小写/校验和、未知币种和金额不猜测、识别不授予人工复核标记、异常清单范围、图片安全验证、敏感哨兵脱敏、固定错误、临时文件清理、非 macOS 明确失败、超时与并发拒绝，以及真实 HTTP OCR 路由无 batch 副作用。
 
-最终自动检查：7 个测试文件、64 项测试；TypeScript 与 Vite production build。测试使用合成凭据/注入 OCR；本机 Vision 另行实测。
+B.AI / OCR 阶段当轮检查为 7 个测试文件、64 项测试；2026-09-30 全量结果为 9 个文件、84 项，TypeScript 与 Vite production build 通过。测试使用合成凭据/注入 OCR；本机 Vision 另行实测。
 
 最终统一浏览器复核：桌面 `1280 px` 与手机 `390 px` 下页面宽度分别等于视口宽度，无横向溢出，浏览器错误列表为空。⌘/Ctrl K 打开 5 项快捷面板，Esc 关闭并恢复页面滚动；业务单搜索找到并标出 2 条同号业务；一行 TSV 只打开待确认粘贴区，原 12 行账表保持不变。
 
@@ -100,14 +119,13 @@ npm run build:tron
 - 重新走通安全演示：生成 3 笔清单、确认、故障注入后得到 1 笔确认 / 1 笔待核查 / 1 笔排队，再查询原 trace 完成 3 笔；页面出现两层 CSV 与一键对账包入口。
 - 最终页面控制台没有 error；开发期间的 Vite 热更新 debug 记录不属于运行错误。
 - 390 × 844 下 `innerWidth`、`document.body.scrollWidth` 与 `document.documentElement.scrollWidth` 均为 390，无横向页面溢出。
-- 切到 GasFree Nile 模式后，页面明确显示 TronLink 未连接与服务端缺少 API Key/Secret；“读取真实预检并生成清单”保持禁用，没有静默回退 fixture。
+- 这组 2026-09-29 截图中，切到 GasFree Nile 模式后，页面明确显示 TronLink 未连接与服务端缺少 API Key/Secret；“读取真实预检并生成清单”保持禁用，没有静默回退 fixture。这是 canary 之前的历史 UI 回归记录。
 - 截图保存在 `verification-live-ui.png`、`verification-paused.png`、`verification-completed.png`、`verification-mobile-live-ui.png` 和 `verification-mobile-live-disabled.png`。
 
-## 尚未验证
+## 已验证与剩余范围
 
-- GasFree API Key/Secret 的真实鉴权。
-- TronLink TIP-712 签名、Nile 授权提交和 Provider 状态查询。
-- GasFree 账户余额、`frozen` 金额、激活费和转账费的实时报价。
-- 真实 traceId、nonce、交易哈希、链上回执及实际费用。
+- 真实 GasFree 鉴权、单笔授权提交、Provider 状态查询、traceId / txHash 关联、固化成功回执、精确 Transfer 日志与实际费用已由上述单笔 canary 验证。
+- 浏览器 TronLink TIP-712 签名、完整三笔批次的真实串行提交/恢复、以及该真实批次的逐行对账包仍未做外部端到端验收。
+- 公开 canary JSON 只附带初始/事后原始余额的一致性复核，不展开 nonce、`frozen` 或预检时报价；这些未展开字段不作为独立的公开验收结论。
 
-提交比赛前必须把上述真实结果补入新的验证记录；不得用本文件中的 `sim_` 标识代替。
+本文件中的 `sim_` 标识仍只属于 fixture，不得用来扩大上述单笔 canary 的证据范围。

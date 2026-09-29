@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "settlemap.public-chain-evidence.v1",
+  "generatedAt": "2026-09-29T15:40:08.532Z",
+  "network": "nile",
+  "scope": {
+    "kind": "one-recipient-canary",
+    "coversFixtureBatch": false,
+    "note": "This proves one standalone GasFree Nile transfer, not the three-payment fixture batch."
+  },
+  "result": {
+    "status": "CONFIRMED",
+    "requestId": "4198b7d4-da5d-4d16-b30a-7439f26530b2",
+    "traceId": "6abc5473-0f57-4f0c-92a6-18f7efc3adc3",
+    "providerState": "SUCCEED",
+    "chainState": "SOLIDITY",
+    "txHash": "1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586",
+    "explorerUrl": "https://nile.tronscan.org/#/transaction/1f3a3de905eeef90570bf297bb592d4ac16383a5a10c1187c4e09b41b5fdd586",
+    "tokenAddress": "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf",
+    "fromAddress": "TH3V9cnUct542ss5ZgAzNHWnFH9ycB1Tw1",
+    "receiverAddress": "TQcxtc1CmGRL8NwuDs3LewTBFycgXb28AR",
+    "amountMicros": 1000001,
+    "actualFeeMicros": 1300000,
+    "verificationSource": "gasfree-provider+nile-solidity-rpc",
+    "chainVerification": {
+      "status": "VERIFIED",
+      "source": "nile-solidity-rpc",
+      "blockNumber": 71389721,
+      "transferLogIndex": 2
+    }
+  },
+  "postState": {
+    "description": "Independent post-state token balance query",
+    "unit": "micro-USDT",
+    "initialGasFreeAddressBalanceRaw": 2000000000,
+    "gasFreeAddressBalanceRaw": 1997699999,
+    "receiverAddressBalanceRaw": 1000001,
+    "expectedGasFreeDebitRaw": 2300001,
+    "balanceChangeConsistent": true
+  },
+  "exactTransferVerified": true,
+  "broadcastPostCount": 1
+}
