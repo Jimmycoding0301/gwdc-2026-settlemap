@@ -5,22 +5,23 @@
 - `0:00` 风险：换址、历史重复、超时双付
 - `0:25` 结果：12 行 → 9 行 → 3 笔，仍保留逐行映射
 - `0:50` 痛点：批量后业务行失去身份；超时不等于失败
-- `1:25` 流程：Review → Group → Authorize → Recover
-- `1:55` Demo：异常 → 清单 → 丢包 → UNKNOWN → 原 trace 恢复
-- `3:10` 真实证据：SUCCEED / SOLIDITY / block 71389721 / log 2
-- `3:50` 用户：创作者、活动、供应商结算团队；非托管 SaaS
-- `4:20` 边界：真实 1-recipient canary；完整批量仍待验证
-- `4:50` 收尾：每条业务有去向，每次不确定都有原 trace
+- `1:20` 流程：Review → Group → Authorize → Recover
+- `1:40` 播放 67 秒 Demo，不重复讲解
+- `2:47` 真实证据：SUCCEED / SOLIDITY / block 71389721 / log 2
+- `3:35` 用户：创作者、活动、供应商结算团队；非托管 SaaS
+- `4:05` 边界：真实 1-recipient canary；完整批量仍待验证
+- `4:45` 收尾：每条业务有去向，每次不确定都有原 trace
 
-## Demo 点击
+## 主 Demo
 
-`载入完整演示` → `只看异常` → `显示全部` → `生成结算清单` → `确认金额与收款人` → `运行浏览器丢包测试` → 指出 UNKNOWN + trace → `查询原 trace 的结果` → 指向 `一键对账包`
+Slide 4 → QuickTime 全屏播放 `demo.mp4` → 67 秒结束 → 回到 Slide 5。
 
 ## 三句必须说
 
 1. 状态未知不等于失败，UNKNOWN 永远不自动重付。
 2. 三笔流程是 fixture；真实证据是一笔独立的 GasFree Nile canary。
 3. 私钥留在 TronLink，成功必须同时通过 Provider 和 Nile RPC 核验。
+4. GasFree 不等于零费用；它让用户无需另外持有 TRX。
 
 ## 三个高频答案
 
@@ -37,4 +38,3 @@
 - 落后 20 秒：跳过竞品逐项解释。
 - App 故障：播放 67 秒 `demo.mp4`。
 - TRONSCAN 故障：读出区块、日志和 tx 结尾，继续收尾。
-
