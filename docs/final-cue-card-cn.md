@@ -14,7 +14,7 @@
 
 ## 主 Demo
 
-Slide 4 → QuickTime 全屏播放 `demo.mp4` → 67 秒结束 → 回到 Slide 5。
+Slide 4 → QuickTime 全屏播放 `demo-cn.mp4` → 67 秒结束 → 回到 Slide 5。
 
 ## 三句必须说
 
@@ -36,5 +36,5 @@ Slide 4 → QuickTime 全屏播放 `demo.mp4` → 67 秒结束 → 回到 Slide 
 ## 超时处理
 
 - 落后 20 秒：跳过竞品逐项解释。
-- App 故障：播放 67 秒 `demo.mp4`。
+- App 故障：播放 67 秒 `demo-cn.mp4`。
 - TRONSCAN 故障：读出区块、日志和 tx 结尾，继续收尾。

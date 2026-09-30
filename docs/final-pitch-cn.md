@@ -34,7 +34,7 @@ SettleMap 从原始业务行开始，为每一笔付款保留一条可以恢复�
 
 ### 1:40–2:47 · 播放 67 秒 Demo
 
-播放 `docs/submission/demo.mp4`。视频有音频，播放时不要重复讲解。结束后只补一句：
+播放 `docs/submission/demo-cn.mp4`。视频有中文音频，播放时不要重复讲解。结束后只补一句：
 
 刚才三笔是明确标记的 fixture 故障演示，没有生成真实 USDT 交易。下面这一页展示独立验证的真实 Nile canary。
 
@@ -69,7 +69,7 @@ GasFree 降低了持有 TRX 的门槛，SettleMap 补上团队采用它所需的
 ### 上台前状态
 
 1. 打开 PPT，停在 Slide 1。
-2. QuickTime 提前打开 `docs/submission/demo.mp4`，停在 0:00，确认声音正常。
+2. QuickTime 提前打开 `docs/submission/demo-cn.mp4`，停在 0:00，确认声音正常。
 3. Chrome 打开 `http://127.0.0.1:5174/`，作为评委要求 live demo 时的备用。
 4. Chrome 顶部必须显示 `FIXTURE · 本地模拟`，不要临场切到 Nile 实时模式。
 5. 关闭系统通知、聊天弹窗和无关浏览器标签。
@@ -100,7 +100,7 @@ GasFree 降低了持有 TRX 的门槛，SettleMap 补上团队采用它所需的
 
 ### Demo 失败时的处理
 
-- 页面没有响应：立即说“我切换到提交时录制的 67 秒完整流程”，播放 `demo.mp4`。
+- 页面没有响应：立即说“我切换到准备好的 67 秒中文完整流程”，播放 `demo-cn.mp4`。
 - 本地服务断开：不要现场修复，播放视频并回到 Slide 5。
 - TRONSCAN 加载慢：留在 Slide 5，直接读出交易哈希结尾 `…dd586`、区块 `71389721`、日志 `2`。赛后让评委打开仓库证据。
 - 任何真实接口失败：不要点击重复提交。说“这正是 SettleMap 把 UNKNOWN 与 FAILED 分开的原因”，然后使用公开证据页。
