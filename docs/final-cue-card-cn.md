@@ -10,7 +10,9 @@
 - `2:47` 真实证据：SUCCEED / SOLIDITY / block 71389721 / log 2
 - `3:35` 用户：创作者、活动、供应商结算团队；非托管 SaaS
 - `4:05` 边界：真实 1-recipient canary；完整批量仍待验证
-- `4:45` 收尾：每条业务有去向，每次不确定都有原 trace
+- `4:45` 收尾：每条业务有处置；有 trace 追原 trace，没有就锁单核查
+
+完整的人话技术解释见 [`final-tech-explainer-cn.md`](final-tech-explainer-cn.md)。
 
 ## 主 Demo
 
